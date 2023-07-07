@@ -1,0 +1,19 @@
+libcurl http commands:
+-u/--url
+-o/--post
+-g/--get
+-p/--put
+-d/--delete
+-h/--help
+
+final argument will be an arbitrary string.
+u/--url will need to handle a properly formatted URL (including localhost) followed by a port number.
+commands should be callable in any order.
+return content from the request preceeded by the HTTP code
+
+if a string is missing when required, exit with a non-0 value.
+will be run on arm.
+
+submit as a single file attachment.
+include compilation command in the first line in the source file as a comment.
+
