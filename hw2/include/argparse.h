@@ -1,5 +1,4 @@
-#include <argp.h>
-#include <curl/curl.h>
+#include <argparse.h>
 
 
 /// Description of the arguments we accept.
@@ -85,3 +84,8 @@ static error_t parse_opt (int key, char* arg, struct argp_state* state) {
 
 //static struct argp argp = { options, parse_opt, args_doc };
 static struct argp argp = { options, parse_opt, "message", args_doc };
+
+int parse_arguments(int argc, char* argv[], struct arguments* args, int* message_index) {
+
+
+};

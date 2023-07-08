@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <curl/curl.h>
 #include "argparse.h"
 
 /// Return codes.
@@ -21,6 +22,7 @@ int main(int argc, char* argv[]) {
 	/// Success status is 0.  If an error occurs we will set a different status number.
 	/// This will be our return value.
 	Status = OK;
+	int message_index = -1;
 	//long http_resp_code;
 	/// Will be used to set the operation for curl to perform.
 	CURLoption arg_opt = CURLOPT_HTTPGET;
@@ -55,24 +57,32 @@ int main(int argc, char* argv[]) {
 	int j = state->next;
 	size_t mess_size = 0;
 	for(int i = state->next; i < argc; i++) {
-		mess_size += sizeof(argv[i]);
+		/// The +1 is to account for adding a space between words
+		/// in the message.
+		mess_size += strlen(argv[i]) + 1;
 	}
 
 	/// Assign enough memory for the message.  Don't forget to free.
+	/// The +1 here is for the string null terminator '\0'.
 	args.message = malloc(mess_size + 1);
 	/// Copy the first message in to initialize the variable.
 	strcpy(args.message, argv[j]);
 	/// Start at j + 1 since we just copied arg[j].
 	for(j = j + 1; j < argc; j++) {
+		/// Add spaces since the argument parser skips them?
+		strcat(args.message, " ");
 		strcat(args.message, argv[j]);
 	}
 	
 	/// url concatenated with message.
-	size_t str_size = sizeof(args.url);
-	str_size += sizeof(args.message);
+	size_t str_size = strlen(args.url);
+	str_size += strlen(args.message);
 	/// Don't forget to free.
-	char* url_message_path = malloc(str_size + 1);
+	/// The +2 here is for the string null terminator '\0'
+	/// and the extra "/".
+	char* url_message_path = malloc(str_size + 2);
 	strcpy(url_message_path, args.url);
+	strcat(url_message_path, "/");
 	strcat(url_message_path, args.message);
 
 	/// Check for -h/--help in command inputs, if it's there
