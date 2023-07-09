@@ -30,17 +30,10 @@ int main(int argc, char* argv[]) {
 	CURL* curl;
 	/// Curl response code; 0 (CURLE_OK) means no problems.
 	CURLcode res;
-	/// Defaults for our arguments.
-	args.url	= NULL;
-	args.delete	= NULL;
-	args.get	= NULL;
-	args.help	= NULL;
-	args.post	= NULL;
-	args.put	= NULL;
-	args.message	= "";
 
-	/// Function to parse command-line arguments.  Defined in argp.h.
-	argp_parse(&argp, argc, argv, 0, 0, &args);
+	/// The argument parser.
+	/// This will fill in our argument structure (args).
+	parse_arguments(argc, argv, &args, &message_index);
 
 	/*///////////////////////////////////////////////////////////////////
 	/// The message will come at the end of the inputs.		  ///
@@ -49,17 +42,16 @@ int main(int argc, char* argv[]) {
 	/// potentially riskier characters.				  ///
 	/// Need to get the size of the message so we can allocate	  ///
 	/// space for the args.message variable.  Using malloc will	  ///
-	/// help us deal with large strings, whereas using		  /// 
+	/// help us deal with large strings, whereas using		  ///
 	/// args.message[mess_size + 1] will allocate from a smaller	  ///
 	/// memory pool.						  ///
 	///////////////////////////////////////////////////////////////////*/
 	
-	int j = state->next;
+	int j = 0;
 	size_t mess_size = 0;
-	for(int i = state->next; i < argc; i++) {
-		/// The +1 is to account for adding a space between words
-		/// in the message.
-		mess_size += strlen(argv[i]) + 1;
+	/// Should increment until end of the message (i.e. a NULL or '\0').
+	for(int i = 0; args.message[i] ; i++) {
+		mess_size += strlen(argv[i]);
 	}
 
 	/// Assign enough memory for the message.  Don't forget to free.
@@ -213,6 +205,7 @@ void print_help(Status error) {
 	-p/--put\t\tSend a PUT request with a message.  REQUIRES a message following the URL.\n\
 	-u/--url\t\tURL to connect to (can be localhost).  To specify a port, follow the URL\n\
 	\t\t\twith a colon (':') then the desired port without spaces.  Assumes port 80 if none given.\n");
+	exit(0);
 }
 
 
