@@ -12,9 +12,9 @@ enum STATUS {
 	OTHER_ERR	// 3 catch all for remaining errors.
 } Status;
 
-void print_help(Status error);
+void print_help(enum Status error);
 
-int main(int argc, char* argv[]) {
+enum STATUS main(int argc, char* argv[]) {
 	/// Create arguments struct.
 	struct arguments args;
 
@@ -51,29 +51,30 @@ int main(int argc, char* argv[]) {
 	int j = 0;
 	size_t mess_size = 0;
 	/// Increment until end of the message (i.e. argc).
-	for(int i = 0; i < argc ; i++) {
-		mess_size += strlen(argv[i]);
+	for(j = args.message_index; j < argc ; j++) {
+		mess_size += strlen(argv[j]);
 	}
 
 	/// Assign enough memory for the message.  Don't forget to free.
 	/// The +1 here is for the string null terminator '\0'.
-	args.message = malloc(mess_size + 1);
-	/// Copy the first message in to initialize the variable.
+	args.message = malloc(sizeof(char) * (mess_size + 1));
+	/// Copy in the first message to initialize the variable.
+	j = args.message_index;
 	strcpy(args.message, argv[j]);
 	/// Start at j + 1 since we just copied arg[j].
 	for(j = j + 1; j < argc; j++) {
-		/// Add spaces since the argument parser skips them?
+		/// Add spaces since the argument parser skips them.
 		strcat(args.message, " ");
 		strcat(args.message, argv[j]);
 	}
 	
-	/// url concatenated with message.
+	/// Concatenate url with message.
 	size_t str_size = strlen(args.url);
 	str_size += strlen(args.message);
 	/// Don't forget to free.
 	/// The +2 here is for the string null terminator '\0'
 	/// and the extra "/".
-	char* url_message_path = malloc(str_size + 2);
+	char* url_message_path = malloc(sizeof(char) * (str_size + 2));
 	strcpy(url_message_path, args.url);
 	strcat(url_message_path, "/");
 	strcat(url_message_path, args.message);
@@ -83,11 +84,10 @@ int main(int argc, char* argv[]) {
 	/// If no arguments are given, print the help and exit.
 	if (args.help != NULL) {
 		print_help(Status);
-		return Status;
 	}
 
 	if (args.delete != NULL) {
-		/// No "official" delete request, but it is recommended to use
+		/// No "official" DELETE request, but it is recommended to use
 		/// a custom request, with the path to the item to delete.
 		arg_opt = CURLOPT_CUSTOMREQUEST;
 	}
@@ -104,20 +104,20 @@ int main(int argc, char* argv[]) {
 
 	if (args.put != NULL) {
 		arg_opt = CURLOPT_UPLOAD;
+		/// Message must exist for PUT request.
 		if (strlen(args.message) == 0UL) {
 			Status = OTHER_ERR;
 			print_help(Status);
-			return Status;
 		}
 	}
-	/// Initialize curl object, then set options.
 
+	/// Initialize curl object, then set options.
 	curl = curl_easy_init();
 	if (curl) {
 
 		/*//////////////////////////////////////////////////////////////////////////////
-		/// Be careful of user input.  Escape any special characters, and return the ///
-		/// option in quotes, to prevent shell expansion.			     ///
+		/// Be careful of user input.  Escape any special characters to prevent	     ///
+		/// shell expansion.							     ///
 		/// Could also turn off shell expansion by setting an environment variable.  ///
 		/// Escapes any special characters; helps protect against		     ///
 		/// any malicious inputs.						     ///
@@ -143,20 +143,20 @@ int main(int argc, char* argv[]) {
 
 		/// Use the input arguments to choose the operation.
 		if (arg_opt == CURLOPT_HTTPGET) {
-			/// Default curl operation with no options is Get.
+			/// Default curl operation with no options is GET.
 			/// We initialize arg_opt to this, but it can be
 			/// "manually" set as well.
 			curl_easy_setopt(curl, arg_opt, 1L);
 		} else if (arg_opt == CURLOPT_CUSTOMREQUEST) {
-			/// If delete is set.
+			/// If DELETE is set.
 			curl_easy_setopt(curl, arg_opt, "DELETE");
 			curl_easy_setopt(curl, CURLOPT_URL, escaped_url_message);
 		} else if (arg_opt == CURLOPT_UPLOAD) {
-			/// If put is set.
+			/// If PUT is set.
 			curl_easy_setopt(curl, arg_opt, 1L);
 			curl_easy_setopt(curl, CURLOPT_URL, escaped_url_message);
 		} else {
-			/// Else, post is set.
+			/// Else, POST is set.
 			curl_easy_setopt(curl, arg_opt, escaped_message);
 		}
 		/// Perform the curl.
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
 }
 
 
-void print_help(Status error) {
+void print_help(enum Status error) {
 	/// If user enters a malformed string, display the error message, otherwise just print help.
 	if(error)
 		printf("Error, incorrect format.\n\n");
@@ -206,7 +206,7 @@ void print_help(Status error) {
 	-p/--put\t\tSend a PUT request with a message.  REQUIRES a message following the URL.\n\
 	-u/--url\t\tURL to connect to (can be localhost).  To specify a port, follow the URL\n\
 	\t\t\twith a colon (':') then the desired port without spaces.  Assumes port 80 if none given.\n");
-	exit(0);
+	exit(error);
 }
 
 
