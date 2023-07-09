@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
-#include "argparse.h"
+#include "../include/argparse.h"
 
 /// Return codes.
 enum STATUS {
@@ -12,9 +12,9 @@ enum STATUS {
 	OTHER_ERR	// 3 catch all for remaining errors.
 } Status;
 
-void print_help(enum Status error);
+void print_help(enum STATUS error);
 
-enum STATUS main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 	/// Create arguments struct.
 	struct arguments args;
 
@@ -22,6 +22,14 @@ enum STATUS main(int argc, char* argv[]) {
 	/// Success status is 0.  If an error occurs we will set a different status number.
 	/// This will be our return value.
 	Status = OK;
+	args.url = NULL;
+	args.delete = NULL;
+	args.get = NULL;
+	args.help = NULL;
+	args.post = NULL;
+	args.put = NULL;
+	args.message = "";
+	args.message_index = -1;
 
 	//long http_resp_code;
 	/// Will be used to set the operation for curl to perform.
@@ -34,7 +42,7 @@ enum STATUS main(int argc, char* argv[]) {
 
 	/// The argument parser.
 	/// This will fill in our argument structure (args).
-	parse_opt(argc, argv, &args);
+	argp_parse(&argp, argc, argv, 0, 0, &args);
 
 	/*///////////////////////////////////////////////////////////////////
 	/// The message will come at the end of the inputs.		  ///
@@ -185,7 +193,7 @@ enum STATUS main(int argc, char* argv[]) {
 }
 
 
-void print_help(enum Status error) {
+void print_help(enum STATUS error) {
 	/// If user enters a malformed string, display the error message, otherwise just print help.
 	if(error)
 		printf("Error, incorrect format.\n\n");

@@ -41,8 +41,7 @@ struct arguments {
 static error_t parse_opt (int key, char* arg, struct argp_state* state) {
   /// Get the input argument from argp_parse, which we
   /// know is a pointer to our arguments structure.
-  struct arg_parser_input* input = (struct arg_parser_input*) state->input;
-  struct arguments* args = input->args;
+  struct arguments* arguments = state->input;
   /// Counter for the number of arguments we've set.  Static so we don't reset
   /// between calls.
   static int option_set = 0;
@@ -108,4 +107,4 @@ static error_t parse_opt (int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-static struct argp argp = { options, parse_opt, args_doc, doc };
+static struct argp argp = { options, parse_opt, args_doc };

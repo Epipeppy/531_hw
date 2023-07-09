@@ -3,10 +3,11 @@ BUILDROOT_HOME=$(HOME)/buildroot
 CC=$(BUILDROOT_HOME)/output/host/usr/bin/arm-linux-gcc
 CFLAGS=--sysroot=$(BUILDROOT_HOME)/output/staging
 #INCLUDES=$(BUILDROOT_HOME)/output/staging/usr/include
-INCLUDES=-I $(HOME)/Documents/hw2/include
+INCLUDES=
 LFLAGS=
 
-LIBS=$(curl-config --libs)
+#LIBS:=$(curl-config --libs)
+LIBS:=-lcurl -uClibc -lc
 SRC=./src/hw.c
 OBJ=$(SRC:.c=.o)
 STATIC_MAIN=static-main
