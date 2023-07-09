@@ -1,11 +1,16 @@
-#include <argparse.h>
+#ifndef ARGPARSE_H
+#define ARGPARSE_H
+
+#include <argp.h>
+
+#endif /* ifndef ARGPARSER_H */
 
 
 /// Description of the arguments we accept.
 static char args_doc[] = "[-dghop] -u <url>[:<port>] [message here]";
 
 /// Array of options, and their associated keys, flags, and docstring.
-/// We set the ARG section to 0 NULL since the message will come 
+/// We set the ARG section to 0 (NULL) since the message will come 
 /// AFTER the url, rather than directly following the argument.
 static struct argp_option options[] = {
   /// NAME     KEY   ARG        FLAGS		DOC
@@ -18,15 +23,18 @@ static struct argp_option options[] = {
   {0, 0, 0, 0, 0}
 };
 
-/// We set these if the argument is called.
+/// We set these if or when the argument is called.
+/// We also fill in the message when we get to it.
 struct arguments {
-  char *url, *delete, *get, *help, *post, *put;
-  char **message;
+	char* url;
+	char* delete;
+	char* get;
+	char* help;
+	char* post;
+	char* put;
+	char** message;
 };
 
-
-/// Counter for the number of arguments we've set.
-int option_set = 0;
 
 /// Parse a single option.
 static error_t parse_opt (int key, char* arg, struct argp_state* state) {
@@ -34,6 +42,9 @@ static error_t parse_opt (int key, char* arg, struct argp_state* state) {
   /// know is a pointer to our arguments structure.
   struct arg_parser_input* input = (struct arg_parser_input*) state->input;
   struct arguments* args = input->args;
+  /// Counter for the number of arguments we've set.  Static so we don't reset
+  /// between calls.
+  static int option_set = 0;
 
   /*///////////////////////////////////////////////////////////////////////
   /// We only want to allow 1 option to be set (excluding url).         ///
@@ -92,24 +103,4 @@ static error_t parse_opt (int key, char* arg, struct argp_state* state) {
   return 0;
 }
 
-//static struct argp argp = { options, parse_opt, args_doc };
 static struct argp argp = { options, parse_opt, args_doc, doc };
-
-int parse_arguments(int argc, char* argv[], struct arguments* args) {
-
-  /// Defaults for our arguments.
-  args.url	= NULL;
-  args.delete	= NULL;
-  args.get	= NULL;
-  args.help	= NULL;
-  args.post	= NULL;
-  args.put	= NULL;
-
-  struct arg_parser_input input = {
-    .message_index = message_index,
-    .args = args;
-  };
-  
-  /// Function to parse command-line arguments.  Defined in argp.h.
-  argp_parse(&argp, argc, argv, 0, 0, &input);
-};

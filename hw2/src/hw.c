@@ -22,9 +22,10 @@ int main(int argc, char* argv[]) {
 	/// Success status is 0.  If an error occurs we will set a different status number.
 	/// This will be our return value.
 	Status = OK;
-	int message_index = -1;
+
 	//long http_resp_code;
 	/// Will be used to set the operation for curl to perform.
+	/// Defaulting to GET.
 	CURLoption arg_opt = CURLOPT_HTTPGET;
 	/// Pointer to curl object.
 	CURL* curl;
@@ -33,7 +34,7 @@ int main(int argc, char* argv[]) {
 
 	/// The argument parser.
 	/// This will fill in our argument structure (args).
-	parse_arguments(argc, argv, &args, &message_index);
+	parse_opt(argc, argv, &args);
 
 	/*///////////////////////////////////////////////////////////////////
 	/// The message will come at the end of the inputs.		  ///
@@ -49,8 +50,8 @@ int main(int argc, char* argv[]) {
 	
 	int j = 0;
 	size_t mess_size = 0;
-	/// Should increment until end of the message (i.e. a NULL or '\0').
-	for(int i = 0; args.message[i] ; i++) {
+	/// Increment until end of the message (i.e. argc).
+	for(int i = 0; i < argc ; i++) {
 		mess_size += strlen(argv[i]);
 	}
 
