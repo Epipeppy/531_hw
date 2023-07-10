@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 			strcat(args.message, argv[j]);
 		}
 
-		printf("%s", args.message);
+		printf("%s\n", args.message);
 	}
 
 	/// Check for -h/--help in command inputs, if it's there
@@ -142,7 +142,12 @@ int main(int argc, char *argv[])
 		/// Auto-determine string length by passing 0 as the last argument.	     ///
 		//////////////////////////////////////////////////////////////////////////////*/
 
-		char *escaped_message = curl_easy_escape(curl, args.message, 0);
+		char *escaped_message;
+		if (strlen(args.message) != 0UL) {
+			escaped_message = curl_easy_escape(curl, args.message, 0);
+		} else {
+			escaped_message = args.message;
+		}
 		/// We don't access args.message after this, so we should be in
 		/// the clear to free the memory here. Moving free() calls to before the return.
 
@@ -211,7 +216,6 @@ int main(int argc, char *argv[])
 	else
 	{
 		Status = INIT_ERR;
-		/// Free memory.
 	}
 
 	/// Clean up.
