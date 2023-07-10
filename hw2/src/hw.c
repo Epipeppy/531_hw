@@ -1,20 +1,20 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <curl/curl.h>
 #include "../include/argparse.h"
 
 /// Return codes.
-enum STATUS {
-	OK,		// 0 everything worked.
-	INIT_ERR,	// 1 error initializing curl object.
-	REQ_ERR,	// 2 error requesting information.
-	OTHER_ERR	// 3 catch all for remaining errors.
+enum STATUS
+{
+	OK,		  // 0 everything worked.
+	INIT_ERR, // 1 error initializing curl object.
+	REQ_ERR,  // 2 error requesting information.
+	OTHER_ERR // 3 catch all for remaining errors.
 } Status;
 
 void print_help(enum STATUS error);
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
 	/// Create arguments struct.
 	struct arguments args;
 
@@ -31,12 +31,12 @@ int main(int argc, char* argv[]) {
 	args.message = "";
 	args.message_index = -1;
 
-	//long http_resp_code;
+	// long http_resp_code;
 	/// Will be used to set the operation for curl to perform.
 	/// Defaulting to GET.
 	CURLoption arg_opt = CURLOPT_HTTPGET;
 	/// Pointer to curl object.
-	CURL* curl;
+	CURL *curl;
 	/// Curl response code; 0 (CURLE_OK) means no problems.
 	CURLcode res;
 
@@ -55,65 +55,73 @@ int main(int argc, char* argv[]) {
 	/// args.message[mess_size + 1] will allocate from a smaller	  ///
 	/// memory pool.						  ///
 	///////////////////////////////////////////////////////////////////*/
-	
-	int j = 0;
-	size_t mess_size = 0;
-	/// Increment until end of the message (i.e. argc).
-	for(j = args.message_index; j < argc ; j++) {
-		mess_size += strlen(argv[j]);
-	}
 
-	/// Assign enough memory for the message.  Don't forget to free.
-	/// The +1 here is for the string null terminator '\0'.
-	args.message = malloc(sizeof(char) * (mess_size + 1));
-	/// Copy in the first message to initialize the variable.
-	j = args.message_index;
-	strcpy(args.message, argv[j]);
-	/// Start at j + 1 since we just copied arg[j].
-	for(j = j + 1; j < argc; j++) {
-		/// Add spaces since the argument parser skips them.
-		strcat(args.message, " ");
-		strcat(args.message, argv[j]);
+	if ((strlen(args.message) != 0UL) && (args.message_index != -1))
+	{
+		int j = 0;
+		size_t mess_size = 0;
+		/// Increment until end of the message (i.e. argc).
+		for (j = args.message_index; j < argc; j++)
+		{
+			mess_size += strlen(argv[j]);
+		}
+
+		/// Assign enough memory for the message.  Don't forget to free.
+		/// The +1 here is for the string null terminator '\0'.
+		args.message = malloc(sizeof(char) * (mess_size + 1));
+		/// Copy in the first message to initialize the variable.
+		j = args.message_index;
+		strcpy(args.message, argv[j]);
+		/// Start at j + 1 since we just copied arg[j].
+		for (j = j + 1; j < argc; j++)
+		{
+			/// Add spaces since the argument parser skips them.
+			strcat(args.message, " ");
+			strcat(args.message, argv[j]);
+		}
+
+		printf("%s", args.message);
 	}
-	
-	/// Concatenate url with message.
-	size_t str_size = strlen(args.url);
-	str_size += strlen(args.message);
-	/// Don't forget to free.
-	/// The +2 here is for the string null terminator '\0'
-	/// and the extra "/".
-	char* url_message_path = malloc(sizeof(char) * (str_size + 2));
-	strcpy(url_message_path, args.url);
-	strcat(url_message_path, "/");
-	strcat(url_message_path, args.message);
 
 	/// Check for -h/--help in command inputs, if it's there
 	/// display the help and exit, ignoring all other inputs.
 	/// If no arguments are given, print the help and exit.
-	if (args.help != NULL) {
+	if (args.help != NULL)
+	{
 		print_help(Status);
 	}
 
-	if (args.delete != NULL) {
+	if (args.delete != NULL)
+	{
 		/// No "official" DELETE request, but it is recommended to use
 		/// a custom request, with the path to the item to delete.
 		arg_opt = CURLOPT_CUSTOMREQUEST;
+		/// Message must exist for DELETE request.
+		if (strlen(args.message) == 0UL)
+		{
+			Status = OTHER_ERR;
+			print_help(Status);
+		}
 	}
 
-	if (args.get != NULL) {
+	if (args.get != NULL)
+	{
 		arg_opt = CURLOPT_HTTPGET;
 	}
 
-	if (args.post != NULL) {
+	if (args.post != NULL)
+	{
 		/// From the curl site:
 		/// Using CURLOPT_POSTFIELDS implies setting CURLOPTPOST to 1.
 		arg_opt = CURLOPT_POSTFIELDS;
 	}
 
-	if (args.put != NULL) {
+	if (args.put != NULL)
+	{
 		arg_opt = CURLOPT_UPLOAD;
 		/// Message must exist for PUT request.
-		if (strlen(args.message) == 0UL) {
+		if (strlen(args.message) == 0UL)
+		{
 			Status = OTHER_ERR;
 			print_help(Status);
 		}
@@ -121,49 +129,68 @@ int main(int argc, char* argv[]) {
 
 	/// Initialize curl object, then set options.
 	curl = curl_easy_init();
-	if (curl) {
+	if (curl)
+	{
 
 		/*//////////////////////////////////////////////////////////////////////////////
 		/// Be careful of user input.  Escape any special characters to prevent	     ///
 		/// shell expansion.							     ///
 		/// Could also turn off shell expansion by setting an environment variable.  ///
-		/// Escapes any special characters; helps protect against		     ///
-		/// any malicious inputs.						     ///
+		/// Escaping any special characters helps protect against		     ///
+		/// malicious inputs.							     ///
 		/// Must use curl_free when done with string to free up memory.		     ///
 		/// Auto-determine string length by passing 0 as the last argument.	     ///
 		//////////////////////////////////////////////////////////////////////////////*/
 
-		char* escaped_url = curl_easy_escape(curl, args.url, 0);
-		char* escaped_message = curl_easy_escape(curl, args.message, 0);
-		char* escaped_url_message = curl_easy_escape(curl, url_message_path, 0);
+		char *escaped_message = curl_easy_escape(curl, args.message, 0);
 		/// We don't access args.message after this, so we should be in
 		/// the clear to free the memory here. Moving free() calls to before the return.
-		//free(args.message);
 
 		/// Set url.
-		curl_easy_setopt(curl, CURLOPT_URL, escaped_url);
+		curl_easy_setopt(curl, CURLOPT_URL, args.url);
 		/// Follow redirects.
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 		/// Resolve IP automatically.
 		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_WHATEVER);
 		/// Display header with/before body.
 		curl_easy_setopt(curl, CURLOPT_HEADER, 1L);
+		/// Data to send (i.e. the message).
+		curl_easy_setopt(curl, CURLOPT_READDATA, escaped_message);
 
 		/// Use the input arguments to choose the operation.
-		if (arg_opt == CURLOPT_HTTPGET) {
+		if (arg_opt == CURLOPT_HTTPGET)
+		{
 			/// Default curl operation with no options is GET.
 			/// We initialize arg_opt to this, but it can be
 			/// "manually" set as well.
 			curl_easy_setopt(curl, arg_opt, 1L);
-		} else if (arg_opt == CURLOPT_CUSTOMREQUEST) {
+		}
+		else if (arg_opt == CURLOPT_CUSTOMREQUEST)
+		{
 			/// If DELETE is set.
+			/// Need a "file path" for DELETE requests.
+			char *url_message_path;
+			/// To account for the '/' and string terminator '\0'
+			/// we add +2 to the size.
+			size_t path_size = strlen(args.url) + 2;
+			path_size += strlen(escaped_message);
+			/// Don't forget to free().
+			url_message_path = malloc(sizeof(char) * path_size);
+			strcpy(url_message_path, args.url);
+			strcat(url_message_path, "/");
+			strcat(url_message_path, escaped_message);
 			curl_easy_setopt(curl, arg_opt, "DELETE");
-			curl_easy_setopt(curl, CURLOPT_URL, escaped_url_message);
-		} else if (arg_opt == CURLOPT_UPLOAD) {
+			curl_easy_setopt(curl, CURLOPT_URL, url_message_path);
+			/// Need to free here due to scope.
+			free(url_message_path);
+		}
+		else if (arg_opt == CURLOPT_UPLOAD)
+		{
 			/// If PUT is set.
 			curl_easy_setopt(curl, arg_opt, 1L);
-			curl_easy_setopt(curl, CURLOPT_URL, escaped_url_message);
-		} else {
+		}
+		else
+		{
 			/// Else, POST is set.
 			curl_easy_setopt(curl, arg_opt, escaped_message);
 		}
@@ -172,32 +199,33 @@ int main(int argc, char* argv[]) {
 
 		/// Display HTTP response code.
 		/// Shown in the header.
-		//curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_resp_code);
+		// curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_resp_code);
 
-		if (res != CURLE_OK) {
+		if (res != CURLE_OK)
+		{
 			Status = REQ_ERR;
 		}
 		/// Free memory.
-		curl_free(escaped_url);
 		curl_free(escaped_message);
-		curl_free(escaped_url_message);
-	} else {
-		Status = INIT_ERR;
 	}
-	
+	else
+	{
+		Status = INIT_ERR;
+		/// Free memory.
+	}
+
 	/// Clean up.
 	free(args.message);
-	free(url_message_path);
 	curl_easy_cleanup(curl);
 	return Status;
 }
 
-
-void print_help(enum STATUS error) {
+void print_help(enum STATUS error)
+{
 	/// If user enters a malformed string, display the error message, otherwise just print help.
-	if(error)
+	if (error)
 		printf("Error, incorrect format.\n\n");
-	
+
 	printf("Usage:\n hw [option] -u/--url <url>[:<port>=80] [message]\n\
 	Simple curl implementation.  Sends an HTTP Request.\n\
 	Displays HTTP code (e.g. 404, 500, etc.) followed by any content returned.\n\
@@ -216,5 +244,3 @@ void print_help(enum STATUS error) {
 	\t\t\twith a colon (':') then the desired port without spaces.  Assumes port 80 if none given.\n");
 	exit(error);
 }
-
-

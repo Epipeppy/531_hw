@@ -25,6 +25,11 @@ $(MAIN) : $(OBJ)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJ) $(LFLAGS) $(LIBS)
 
 
+m:
+	$(RM) $(MAIN) $(DYNAMIC_MAIN) $(STATIC_MAIN) ./src/hw.o 
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJ) $(LFLAGS) $(LIBS)
+
+
 build:
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJ) $(LFLAGS) $(LIBS)
 
@@ -36,4 +41,4 @@ all: $(OBJ)
 
 
 clean:
-	$(RM) $(DYNAMIC_MAIN) $(STATIC_MAIN) *.o *~
+	$(RM) $(MAIN) $(DYNAMIC_MAIN) $(STATIC_MAIN) ./src/hw.o 

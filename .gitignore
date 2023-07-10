@@ -1,4 +1,7 @@
 
+# VSCode auto generated files.
+'~'
+.vs*
 *~
 *.a
 *.app
